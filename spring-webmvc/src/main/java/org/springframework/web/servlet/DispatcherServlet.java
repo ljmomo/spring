@@ -489,6 +489,7 @@ public class DispatcherServlet extends FrameworkServlet {
 
 	/**
 	 * This implementation calls {@link #initStrategies}.
+	 * 从 org.springframework.web.servlet.FrameworkServlet#initWebApplicationContext() 回调初始化九大组件
 	 */
 	@Override
 	protected void onRefresh(ApplicationContext context) {
@@ -500,14 +501,21 @@ public class DispatcherServlet extends FrameworkServlet {
 	 * <p>May be overridden in subclasses in order to initialize further strategy objects.
 	 */
 	protected void initStrategies(ApplicationContext context) {
+		//网上说的九大组件
+		//上传主键
 		initMultipartResolver(context);
+		//
 		initLocaleResolver(context);
 		initThemeResolver(context);
+		//初始化HandlerMappings
 		initHandlerMappings(context);
+		//初始化HandlerAdapters
 		initHandlerAdapters(context);
 		initHandlerExceptionResolvers(context);
 		initRequestToViewNameTranslator(context);
+		//初始化视图解析器
 		initViewResolvers(context);
+		//初始化FlashMapManager 就是值栈 用于存储
 		initFlashMapManager(context);
 	}
 
@@ -1012,14 +1020,15 @@ public class DispatcherServlet extends FrameworkServlet {
 				processedRequest = checkMultipart(request);
 				multipartRequestParsed = (processedRequest != request);
 
-				// Determine handler for the current request.
+				// Determine handler for the current request. 获取实时请求的handler(HandlerExecutionChain)
 				mappedHandler = getHandler(processedRequest);
+				//为空返回404
 				if (mappedHandler == null) {
 					noHandlerFound(processedRequest, response);
 					return;
 				}
 
-				// Determine handler adapter for the current request.
+				// Determine handler adapter for the current request. 获取当前请求的HandlerAdapter
 				HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());
 
 				// Process last-modified header, if supported by the handler.
@@ -1036,7 +1045,7 @@ public class DispatcherServlet extends FrameworkServlet {
 					return;
 				}
 
-				// Actually invoke the handler.
+				// Actually invoke the handler.  handle 返回ModelAndView
 				mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
 
 				if (asyncManager.isConcurrentHandlingStarted()) {
@@ -1054,6 +1063,7 @@ public class DispatcherServlet extends FrameworkServlet {
 				// making them available for @ExceptionHandler methods and other scenarios.
 				dispatchException = new NestedServletException("Handler dispatch failed", err);
 			}
+			//处理返回结果
 			processDispatchResult(processedRequest, response, mappedHandler, mv, dispatchException);
 		}
 		catch (Exception ex) {
@@ -1115,6 +1125,7 @@ public class DispatcherServlet extends FrameworkServlet {
 
 		// Did the handler return a view to render?
 		if (mv != null && !mv.wasCleared()) {
+			//写出去
 			render(mv, request, response);
 			if (errorView) {
 				WebUtils.clearErrorRequestAttributes(request);
